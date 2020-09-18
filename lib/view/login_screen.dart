@@ -5,6 +5,9 @@ import 'package:hive/hive.dart';
 import 'package:learning_ui/bloc/login_bloc.dart';
 import 'package:learning_ui/bloc/login_event.dart';
 import 'package:learning_ui/bloc/login_states.dart';
+import 'package:learning_ui/bloc/shop_bloc.dart';
+import 'package:learning_ui/bloc/shop_state.dart';
+import 'package:learning_ui/hive/item.dart';
 import 'package:learning_ui/hive/person.dart';
 import 'package:learning_ui/main.dart';
 
@@ -18,9 +21,7 @@ class LoginHome extends StatefulWidget {
 class _LoginHomeState extends State<LoginHome> {
   String infor = '';
   bool vLoading = false;
-
   LoginBloc _loginBloc;
-
   TextEditingController _userNameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passWordController = TextEditingController();
@@ -71,7 +72,9 @@ class _LoginHomeState extends State<LoginHome> {
                         Navigator.push(
                             context,
                             new MaterialPageRoute(
-                                builder: (context) => ShopScreen()));
+                                builder: (context) => BlocProvider(
+                                    create: (context)=> ShopBloc(ShopLoading()),
+                                    child: ShopScreen())));
                       } else if (state is LoginError) {
                         vLoading = false;
                         _toast('Login Error');

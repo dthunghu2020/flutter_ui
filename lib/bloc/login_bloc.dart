@@ -12,7 +12,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginStates> {
 
   @override
   Stream<LoginStates> mapEventToState(LoginEvent event) async* {
-
     if (event is CheckLoginEvent) {
       bool success = false;
       yield LoginLoading();

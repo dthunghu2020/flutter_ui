@@ -1,9 +1,15 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
+import 'package:learning_ui/bloc/detail_bloc.dart';
+import 'package:learning_ui/bloc/detail_state.dart';
+import 'package:learning_ui/bloc/shop_bloc.dart';
+import 'package:learning_ui/bloc/shop_event.dart';
+import 'package:learning_ui/bloc/shop_state.dart';
 import 'package:learning_ui/hive/item.dart';
-import 'package:learning_ui/main.dart';
-import 'package:learning_ui/model/model_list.dart';
 import 'package:learning_ui/view/detail_screen.dart';
 
 class ShopScreen extends StatefulWidget {
@@ -14,12 +20,16 @@ class ShopScreen extends StatefulWidget {
 class _ShopScreenState extends State<ShopScreen> {
   String _dropVal;
   List _valNames = ['population', 'hot', 'new', 'normal'];
-  Box<Item> items = Hive.box<Item>(itemBoxName);
+  ShopBloc _shopBloc;
+  bool _loadingVisible = false;
+  Box<Item> _itemBox;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _shopBloc = BlocProvider.of<ShopBloc>(context);
+    _shopBloc.add(LoadingDataEvent());
   }
 
   @override
@@ -223,159 +233,213 @@ class _ShopScreenState extends State<ShopScreen> {
       );
 
   Widget _listItem() => Expanded(
-        child: Container(
-          margin: EdgeInsets.only(top: 10),
-          child: GridView.count(
-            childAspectRatio: ((MediaQuery.of(context).size.width / 2) /
-                (MediaQuery.of(context).size.height * 0.34)),
-            crossAxisCount: 2,
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 4,
-            children: items.values
-                .map((item) => GestureDetector(
-                      onTap: () {
-                        int x = item.id;
-                        Fluttertoast.showToast(
-                            msg: "Item $x clicked ",
-                            toastLength: Toast.LENGTH_SHORT,
-                            gravity: ToastGravity.BOTTOM,
-                            timeInSecForIosWeb: 1,
-                            backgroundColor: Colors.grey,
-                            textColor: Colors.white,
-                            fontSize: 16.0);
-                        Navigator.push(
-                            context,
-                            new MaterialPageRoute(
-                                builder: (context) =>
-                                    DetailScreen(idItem: item.id)));
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(10),
-                        child: Column(
-                          children: [
-                            //hình ảnh
-                            Expanded(
-                              flex: 8,
-                              child: Container(
-                                width: MediaQuery.of(context).size.width * 0.4,
-                                height: MediaQuery.of(context).size.width * 0.4,
-                                child: Image(
-                                  image: AssetImage(item.image),
-                                  fit: BoxFit.cover,
-                                ),
+        child: BlocConsumer(
+          cubit: _shopBloc,
+          listenWhen: (previous, current) =>
+              current is ShopLoading ||
+              current is ShopInitial ||
+              current is ShopGoToDetailSuccess ||
+              current is ShopGoToDetailError,
+          listener: (context, state) {
+            if (state is ShopLoading) {
+              _loadingVisible = true;
+            } else if (state is ShopInitial) {
+              _loadingVisible = false;
+              _itemBox = state.itemBox;
+            } else if (state is ShopGoToDetailSuccess) {
+              Fluttertoast.showToast(
+                  msg: "Item ${state.id} clicked ",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  timeInSecForIosWeb: 1,
+                  backgroundColor: Colors.grey,
+                  textColor: Colors.white,
+                  fontSize: 16.0);
+              Navigator.push(
+                  context,
+                  new MaterialPageRoute(
+                      builder: (context) =>
+                          BlocProvider(
+                              create: (context) => DetailBloc(DetailInitial()),
+                              child: DetailScreen(idItem: state.id))));
+            } else if (state is ShopGoToDetailError) {
+              Fluttertoast.showToast(
+                  msg: "Error",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  timeInSecForIosWeb: 1,
+                  backgroundColor: Colors.grey,
+                  textColor: Colors.white,
+                  fontSize: 16.0);
+            }
+          },
+          buildWhen: (previous, current) =>
+              current is ShopLoading || current is ShopInitial,
+          builder: (context, state) {
+            if (_itemBox != null) {
+              return Container(
+                margin: EdgeInsets.only(top: 10),
+                child: GridView.count(
+                  childAspectRatio:
+                  ((MediaQuery.of(context).size.width / 2) /
+                      (MediaQuery.of(context).size.height * 0.34)),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 4,
+                  mainAxisSpacing: 4,
+                  children: _itemBox.values
+                      .map((item) => GestureDetector(
+                    onTap: () {
+                      _shopBloc.add(GoToDetailEvent(item.id));
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(10),
+                      child: Column(
+                        children: [
+                          //hình ảnh
+                          Expanded(
+                            flex: 8,
+                            child: Container(
+                              width: MediaQuery.of(context)
+                                  .size
+                                  .width *
+                                  0.4,
+                              height: MediaQuery.of(context)
+                                  .size
+                                  .width *
+                                  0.4,
+                              child: Image(
+                                image: AssetImage(item.image),
+                                fit: BoxFit.cover,
                               ),
                             ),
-                            SizedBox(
-                              height: 2,
-                            ),
-                            //tên
-                            Expanded(
-                              flex: 3,
-                              child: Container(
-                                child: Text(
-                                  item.name,
-                                  style: TextStyle(fontSize: 12.6),
-                                ),
+                          ),
+                          SizedBox(
+                            height: 2,
+                          ),
+                          //tên
+                          Expanded(
+                            flex: 3,
+                            child: Container(
+                              child: Text(
+                                item.name,
+                                style: TextStyle(fontSize: 12.6),
                               ),
                             ),
-                            SizedBox(
-                              height: 2,
-                            ),
-                            //tiền
-                            Expanded(
-                              flex: 1,
-                              child: Container(
-                                width: double.infinity,
-                                child: Text(
-                                  item.cost,
-                                  style: TextStyle(
-                                      color: Colors.red,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold),
-                                ),
+                          ),
+                          SizedBox(
+                            height: 2,
+                          ),
+                          //tiền
+                          Expanded(
+                            flex: 1,
+                            child: Container(
+                              width: double.infinity,
+                              child: Text(
+                                item.cost,
+                                style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold),
                               ),
                             ),
-                            //bottom
-                            Expanded(
-                              flex: 1,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                      flex: 1,
-                                      child: Icon(
-                                        Icons.star,
-                                        size: 18,
-                                        color: Colors.orangeAccent,
-                                      )),
-                                  Expanded(
-                                      flex: 1,
-                                      child: Icon(
-                                        Icons.star,
-                                        size: 18,
-                                        color: Colors.orangeAccent,
-                                      )),
-                                  Expanded(
-                                      flex: 1,
-                                      child: Icon(
-                                        Icons.star,
-                                        size: 18,
-                                        color: Colors.orangeAccent,
-                                      )),
-                                  Expanded(
-                                      flex: 1,
-                                      child: Icon(
-                                        Icons.star,
-                                        size: 18,
-                                        color: Colors.orangeAccent,
-                                      )),
-                                  Expanded(
+                          ),
+                          //bottom
+                          Expanded(
+                            flex: 1,
+                            child: Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.center,
+                              children: [
+                                Expanded(
                                     flex: 1,
-                                    child: SizedBox(),
-                                  ),
-                                  Expanded(
-                                      flex: 5,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          var x = item.id;
-                                          Fluttertoast.showToast(
-                                              msg: "Add $x",
-                                              toastLength: Toast.LENGTH_SHORT,
-                                              gravity: ToastGravity.BOTTOM,
-                                              timeInSecForIosWeb: 1,
-                                              backgroundColor: Colors.grey,
-                                              textColor: Colors.white,
-                                              fontSize: 16.0);
-                                        },
-                                        child: Container(
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            'Add to cart',
-                                            style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.red),
-                                          ),
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              color: Colors.white,
-                                              boxShadow: [
-                                                BoxShadow(
-                                                    color: Colors.grey,
-                                                    blurRadius: 1,
-                                                    offset: Offset(0, 1))
-                                              ]),
+                                    child: Icon(
+                                      Icons.star,
+                                      size: 18,
+                                      color: Colors.orangeAccent,
+                                    )),
+                                Expanded(
+                                    flex: 1,
+                                    child: Icon(
+                                      Icons.star,
+                                      size: 18,
+                                      color: Colors.orangeAccent,
+                                    )),
+                                Expanded(
+                                    flex: 1,
+                                    child: Icon(
+                                      Icons.star,
+                                      size: 18,
+                                      color: Colors.orangeAccent,
+                                    )),
+                                Expanded(
+                                    flex: 1,
+                                    child: Icon(
+                                      Icons.star,
+                                      size: 18,
+                                      color: Colors.orangeAccent,
+                                    )),
+                                Expanded(
+                                  flex: 1,
+                                  child: SizedBox(),
+                                ),
+                                Expanded(
+                                    flex: 5,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        var x = item.id;
+                                        Fluttertoast.showToast(
+                                            msg: "Add $x",
+                                            toastLength:
+                                            Toast.LENGTH_SHORT,
+                                            gravity:
+                                            ToastGravity.BOTTOM,
+                                            timeInSecForIosWeb: 1,
+                                            backgroundColor:
+                                            Colors.grey,
+                                            textColor: Colors.white,
+                                            fontSize: 16.0);
+                                      },
+                                      child: Container(
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          'Add to cart',
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.red),
                                         ),
-                                      )),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                            BorderRadius
+                                                .circular(12),
+                                            color: Colors.white,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                  color:
+                                                  Colors.grey,
+                                                  blurRadius: 1,
+                                                  offset:
+                                                  Offset(0, 1))
+                                            ]),
+                                      ),
+                                    )),
+                              ],
+                            ),
+                          )
+                        ],
                       ),
-                    ))
-                .toList(),
-          ),
+                    ),
+                  ))
+                      .toList(),
+                ),
+              );
+            } else {
+              return Align(
+                  alignment: Alignment.center,
+                  child: Visibility(
+                      visible: _loadingVisible,
+                      child: CircularProgressIndicator()));
+            }
+          },
         ),
       );
 }

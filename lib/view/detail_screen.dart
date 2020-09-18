@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:grouped_buttons/grouped_buttons.dart';
 import 'package:hive/hive.dart';
+import 'package:learning_ui/bloc/detail_bloc.dart';
+import 'package:learning_ui/bloc/detail_event.dart';
+import 'package:learning_ui/bloc/detail_state.dart';
 import 'package:learning_ui/hive/item.dart';
 import 'package:learning_ui/main.dart';
 import 'package:learning_ui/model/model_list.dart';
@@ -22,15 +26,19 @@ class _DetailScreenState extends State<DetailScreen> {
 
   String _dropVal;
   List _valNames = ['population', 'hot', 'new', 'normal'];
-
   double _fontSize = 12;
-
   List<Widget> _status = [];
   Box<Item> items;
+  bool _editingName = true;
+  DetailBloc _detailBloc;
+  String name = '';
+
+  TextEditingController _nameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _detailBloc = BlocProvider.of<DetailBloc>(context);
     items = Hive.box<Item>(itemBoxName);
     items.getAt(idItem).size.forEach((element) {
       _status.add(Text(
@@ -307,11 +315,71 @@ class _DetailScreenState extends State<DetailScreen> {
       );
 
   Widget _detailName() => Container(
-        alignment: Alignment.center,
+        width:  MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height * 0.1,
-        width: MediaQuery.of(context).size.width / 2,
-        child: Text(
-          items.getAt(idItem).name,
+        child: BlocConsumer(
+          cubit: _detailBloc,
+          listenWhen: (previous, current) =>
+             current is DetailInitial ||current is DetailEditing || current is DetailSavedName,
+          listener: (context, state) {
+            if(state is DetailInitial){
+              _editingName = false;
+            }
+            if (state is DetailEditing) {
+              _editingName = !_editingName;
+              name = state.name;
+            } else if (state is DetailSavedName) {
+              _editingName = !_editingName;
+              name = state.name;
+            }
+          },
+          buildWhen: (previous, current) =>
+              current is DetailEditing || current is DetailSavedName,
+          builder: (context, state) => Stack(
+            children: [
+              Visibility(
+                visible: !_editingName,
+                child: GestureDetector(
+                  onTap: (){
+                    _detailBloc.add(EditingNameEvent(name));
+                  },
+                  child: Container(
+                    alignment: Alignment.center,
+                    height: MediaQuery.of(context).size.height * 0.1,
+                    width: MediaQuery.of(context).size.width / 2,
+                    child: Text(
+                      items.getAt(idItem).name,
+                    ),
+                  ),
+                ),
+              ),
+              Visibility(
+                visible: _editingName,
+                child: Container(
+                  child: Row(
+                    children: [
+                      Container(
+                        child: TextField(
+                          controller: _nameController,
+                        ),
+                      ),
+                      Container(
+                        child: RaisedButton(
+                            color: Colors.grey,
+                            child: Text(
+                              'Save',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                            onPressed: (){
+                              _detailBloc.add(SaveNameEvent(_nameController.text??''));
+                            }),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
 
