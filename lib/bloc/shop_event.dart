@@ -7,3 +7,8 @@ class GoToDetailEvent extends ShopEvent {
 }
 
 class LoadingDataEvent extends ShopEvent {}
+class UpdateDataEvent extends ShopEvent {
+  int id;
+
+  UpdateDataEvent(this.id);
+}

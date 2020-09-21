@@ -30,6 +30,8 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
       yield ShopLoading();
       await Future.delayed(Duration(seconds: 3));
       yield ShopInitial(itemBox);
+    } else if (event is UpdateDataEvent) {
+      yield ShopUpdateItem(itemBox.getAt(event.id).name);
     }
   }
 }

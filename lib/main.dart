@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:learning_ui/api/movie_api_provider.dart';
 import 'package:learning_ui/hive/item.dart';
 import 'package:learning_ui/hive/person.dart';
+import 'package:learning_ui/model/model_movie.dart';
 import 'package:learning_ui/my_setting.dart';
 import 'package:learning_ui/view/login_screen.dart';
 
@@ -19,6 +21,9 @@ void main() async {
     MySetting().setFirstTime(true);
     addItemsData();
   }
+  MovieApiProvider test = MovieApiProvider();
+  MovieData data = await test.getDataMovieGetFromApi();
+  print('data: page(${data.page}) - total_results(${data.totalResults}) - total_pages(${data.totalPages})');
   return runApp(MaterialApp(
     title: 'Login App',
     home: LoginHome(),
@@ -59,5 +64,4 @@ void addItemsData() {
       "Mua Thrasher Magazine Flame Short Sleeve T-Shirt trên Amazon Mỹ chính hãng 2020 | Fado",
       "\$500",
       ['xxl', 'xl', 'x', 'xs']));
-  print('${itemBox.getAt(3).size}');
 }

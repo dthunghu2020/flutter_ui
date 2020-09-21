@@ -7,7 +7,6 @@ import 'package:learning_ui/main.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginStates> {
   Box<Person> personBox = Hive.box<Person>(personBoxName);
-
   LoginBloc(LoginStates initialState) : super(initialState);
 
   @override

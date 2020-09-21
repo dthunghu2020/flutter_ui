@@ -18,3 +18,8 @@ class ShopGoToDetailSuccess extends ShopState {
 }
 
 class ShopGoToDetailError extends ShopState {}
+class ShopUpdateItem extends ShopState {
+  String name;
+
+  ShopUpdateItem(this.name);
+}

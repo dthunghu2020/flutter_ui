@@ -8,6 +8,7 @@ class EditingNameEvent extends DetailEvent {
 
 class SaveNameEvent extends DetailEvent {
   String name;
+  int id;
 
-  SaveNameEvent(this.name);
+  SaveNameEvent(this.name,this.id);
 }

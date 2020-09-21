@@ -20,17 +20,18 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
-  int idItem;
-
   _DetailScreenState(this.idItem);
 
-  String _dropVal;
-  List _valNames = ['population', 'hot', 'new', 'normal'];
-  double _fontSize = 12;
-  List<Widget> _status = [];
   Box<Item> items;
-  bool _editingName = true;
   DetailBloc _detailBloc;
+
+  List _valNames = ['population', 'hot', 'new', 'normal'];
+  List<Widget> _status = [];
+  bool _editingName;
+  bool _changed;
+  double _fontSize = 12;
+  int idItem;
+  String _dropVal;
   String name = '';
 
   TextEditingController _nameController = TextEditingController();
@@ -46,6 +47,9 @@ class _DetailScreenState extends State<DetailScreen> {
         style: TextStyle(fontSize: 12),
       ));
     });
+    _nameController.text = items.getAt(idItem).name;
+    _editingName = false;
+    _changed = false;
   }
 
   @override
@@ -315,14 +319,16 @@ class _DetailScreenState extends State<DetailScreen> {
       );
 
   Widget _detailName() => Container(
-        width:  MediaQuery.of(context).size.width,
+        width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height * 0.1,
         child: BlocConsumer(
           cubit: _detailBloc,
           listenWhen: (previous, current) =>
-             current is DetailInitial ||current is DetailEditing || current is DetailSavedName,
+              current is DetailInitial ||
+              current is DetailEditing ||
+              current is DetailSavedName,
           listener: (context, state) {
-            if(state is DetailInitial){
+            if (state is DetailInitial) {
               _editingName = false;
             }
             if (state is DetailEditing) {
@@ -331,16 +337,18 @@ class _DetailScreenState extends State<DetailScreen> {
             } else if (state is DetailSavedName) {
               _editingName = !_editingName;
               name = state.name;
+              _nameController.text = name;
             }
           },
           buildWhen: (previous, current) =>
               current is DetailEditing || current is DetailSavedName,
           builder: (context, state) => Stack(
+            alignment: Alignment.center,
             children: [
               Visibility(
                 visible: !_editingName,
                 child: GestureDetector(
-                  onTap: (){
+                  onTap: () {
                     _detailBloc.add(EditingNameEvent(name));
                   },
                   child: Container(
@@ -357,21 +365,37 @@ class _DetailScreenState extends State<DetailScreen> {
                 visible: _editingName,
                 child: Container(
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
+                        margin: EdgeInsets.only(top: 10),
+                        width: MediaQuery.of(context).size.width * 0.6,
+                        height: double.infinity,
                         child: TextField(
+                          style: TextStyle(
+                            fontSize: _fontSize,
+                          ),
+                          maxLines: 2,
                           controller: _nameController,
                         ),
                       ),
                       Container(
+                        margin: EdgeInsets.only(left: 10),
+                        width: MediaQuery.of(context).size.width * 0.2,
+                        height: MediaQuery.of(context).size.width * 0.1,
                         child: RaisedButton(
-                            color: Colors.grey,
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                             child: Text(
                               'Save',
                               style: TextStyle(color: Colors.red),
                             ),
-                            onPressed: (){
-                              _detailBloc.add(SaveNameEvent(_nameController.text??''));
+                            onPressed: () {
+                              _changed = true;
+                              _detailBloc.add(SaveNameEvent(
+                                  _nameController.text ?? '', idItem));
                             }),
                       )
                     ],
@@ -507,7 +531,7 @@ class _DetailScreenState extends State<DetailScreen> {
       );
 
   void _moveToLastScreen() {
-    Navigator.pop(context);
+    Navigator.pop(context,_changed);
     Fluttertoast.showToast(
         msg: "Back",
         toastLength: Toast.LENGTH_SHORT,

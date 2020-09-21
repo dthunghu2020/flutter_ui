@@ -18,11 +18,12 @@ class ShopScreen extends StatefulWidget {
 }
 
 class _ShopScreenState extends State<ShopScreen> {
-  String _dropVal;
-  List _valNames = ['population', 'hot', 'new', 'normal'];
   ShopBloc _shopBloc;
-  bool _loadingVisible = false;
   Box<Item> _itemBox;
+
+  List _valNames = ['population', 'hot', 'new', 'normal'];
+  String _dropVal, _itemName;
+  bool _loadingVisible = false;
 
   @override
   void initState() {
@@ -240,7 +241,7 @@ class _ShopScreenState extends State<ShopScreen> {
               current is ShopInitial ||
               current is ShopGoToDetailSuccess ||
               current is ShopGoToDetailError,
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is ShopLoading) {
               _loadingVisible = true;
             } else if (state is ShopInitial) {
@@ -255,13 +256,15 @@ class _ShopScreenState extends State<ShopScreen> {
                   backgroundColor: Colors.grey,
                   textColor: Colors.white,
                   fontSize: 16.0);
-              Navigator.push(
+              bool _result = await Navigator.push(
                   context,
-                  new MaterialPageRoute(
-                      builder: (context) =>
-                          BlocProvider(
-                              create: (context) => DetailBloc(DetailInitial()),
-                              child: DetailScreen(idItem: state.id))));
+                  MaterialPageRoute(
+                      builder: (context) => BlocProvider(
+                          create: (context) => DetailBloc(DetailInitial()),
+                          child: DetailScreen(idItem: state.id))));
+              if (_result) {
+                _shopBloc.add(UpdateDataEvent(state.id));
+              }
             } else if (state is ShopGoToDetailError) {
               Fluttertoast.showToast(
                   msg: "Error",
@@ -280,155 +283,163 @@ class _ShopScreenState extends State<ShopScreen> {
               return Container(
                 margin: EdgeInsets.only(top: 10),
                 child: GridView.count(
-                  childAspectRatio:
-                  ((MediaQuery.of(context).size.width / 2) /
+                  childAspectRatio: ((MediaQuery.of(context).size.width / 2) /
                       (MediaQuery.of(context).size.height * 0.34)),
                   crossAxisCount: 2,
                   crossAxisSpacing: 4,
                   mainAxisSpacing: 4,
                   children: _itemBox.values
                       .map((item) => GestureDetector(
-                    onTap: () {
-                      _shopBloc.add(GoToDetailEvent(item.id));
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(10),
-                      child: Column(
-                        children: [
-                          //hình ảnh
-                          Expanded(
-                            flex: 8,
-                            child: Container(
-                              width: MediaQuery.of(context)
-                                  .size
-                                  .width *
-                                  0.4,
-                              height: MediaQuery.of(context)
-                                  .size
-                                  .width *
-                                  0.4,
-                              child: Image(
-                                image: AssetImage(item.image),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 2,
-                          ),
-                          //tên
-                          Expanded(
-                            flex: 3,
-                            child: Container(
-                              child: Text(
-                                item.name,
-                                style: TextStyle(fontSize: 12.6),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 2,
-                          ),
-                          //tiền
-                          Expanded(
-                            flex: 1,
-                            child: Container(
-                              width: double.infinity,
-                              child: Text(
-                                item.cost,
-                                style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                          //bottom
-                          Expanded(
-                            flex: 1,
-                            child: Row(
-                              mainAxisAlignment:
-                              MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                    flex: 1,
-                                    child: Icon(
-                                      Icons.star,
-                                      size: 18,
-                                      color: Colors.orangeAccent,
-                                    )),
-                                Expanded(
-                                    flex: 1,
-                                    child: Icon(
-                                      Icons.star,
-                                      size: 18,
-                                      color: Colors.orangeAccent,
-                                    )),
-                                Expanded(
-                                    flex: 1,
-                                    child: Icon(
-                                      Icons.star,
-                                      size: 18,
-                                      color: Colors.orangeAccent,
-                                    )),
-                                Expanded(
-                                    flex: 1,
-                                    child: Icon(
-                                      Icons.star,
-                                      size: 18,
-                                      color: Colors.orangeAccent,
-                                    )),
-                                Expanded(
-                                  flex: 1,
-                                  child: SizedBox(),
-                                ),
-                                Expanded(
-                                    flex: 5,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        var x = item.id;
-                                        Fluttertoast.showToast(
-                                            msg: "Add $x",
-                                            toastLength:
-                                            Toast.LENGTH_SHORT,
-                                            gravity:
-                                            ToastGravity.BOTTOM,
-                                            timeInSecForIosWeb: 1,
-                                            backgroundColor:
-                                            Colors.grey,
-                                            textColor: Colors.white,
-                                            fontSize: 16.0);
-                                      },
+                            onTap: () {
+                              _shopBloc.add(GoToDetailEvent(item.id));
+                            },
+                            child: BlocConsumer(
+                              cubit: _shopBloc,
+                              listenWhen: (previous, current) =>
+                                  current is ShopUpdateItem,
+                              listener: (context, state) {
+                                if (state is ShopUpdateItem) {
+                                  _itemName = state.name;
+                                }
+                              },
+                              buildWhen: (previous, current) =>
+                                  current is ShopUpdateItem,
+                              builder: (context, state) => Container(
+                                padding: EdgeInsets.all(10),
+                                child: Column(
+                                  children: [
+                                    //hình ảnh
+                                    Expanded(
+                                      flex: 8,
                                       child: Container(
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          'Add to cart',
-                                          style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.red),
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.4,
+                                        height:
+                                            MediaQuery.of(context).size.width *
+                                                0.4,
+                                        child: Image(
+                                          image: AssetImage(item.image),
+                                          fit: BoxFit.cover,
                                         ),
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                            BorderRadius
-                                                .circular(12),
-                                            color: Colors.white,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                  color:
-                                                  Colors.grey,
-                                                  blurRadius: 1,
-                                                  offset:
-                                                  Offset(0, 1))
-                                            ]),
                                       ),
-                                    )),
-                              ],
+                                    ),
+                                    SizedBox(
+                                      height: 2,
+                                    ),
+                                    //tên
+                                    Expanded(
+                                      flex: 3,
+                                      child: Container(
+                                        child: Text(
+                                          _itemName = item.name,
+                                          style: TextStyle(fontSize: 12.6),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 2,
+                                    ),
+                                    //tiền
+                                    Expanded(
+                                      flex: 1,
+                                      child: Container(
+                                        width: double.infinity,
+                                        child: Text(
+                                          item.cost,
+                                          style: TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                    //bottom
+                                    Expanded(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                              flex: 1,
+                                              child: Icon(
+                                                Icons.star,
+                                                size: 18,
+                                                color: Colors.orangeAccent,
+                                              )),
+                                          Expanded(
+                                              flex: 1,
+                                              child: Icon(
+                                                Icons.star,
+                                                size: 18,
+                                                color: Colors.orangeAccent,
+                                              )),
+                                          Expanded(
+                                              flex: 1,
+                                              child: Icon(
+                                                Icons.star,
+                                                size: 18,
+                                                color: Colors.orangeAccent,
+                                              )),
+                                          Expanded(
+                                              flex: 1,
+                                              child: Icon(
+                                                Icons.star,
+                                                size: 18,
+                                                color: Colors.orangeAccent,
+                                              )),
+                                          Expanded(
+                                            flex: 1,
+                                            child: SizedBox(),
+                                          ),
+                                          Expanded(
+                                              flex: 5,
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  var x = item.id;
+                                                  Fluttertoast.showToast(
+                                                      msg: "Add $x",
+                                                      toastLength:
+                                                          Toast.LENGTH_SHORT,
+                                                      gravity:
+                                                          ToastGravity.BOTTOM,
+                                                      timeInSecForIosWeb: 1,
+                                                      backgroundColor:
+                                                          Colors.grey,
+                                                      textColor: Colors.white,
+                                                      fontSize: 16.0);
+                                                },
+                                                child: Container(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    'Add to cart',
+                                                    style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.red),
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      color: Colors.white,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                            color: Colors.grey,
+                                                            blurRadius: 1,
+                                                            offset:
+                                                                Offset(0, 1))
+                                                      ]),
+                                                ),
+                                              )),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
                             ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ))
+                          ))
                       .toList(),
                 ),
               );
