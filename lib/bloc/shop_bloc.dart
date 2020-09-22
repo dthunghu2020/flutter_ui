@@ -32,6 +32,8 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
       yield ShopInitial(itemBox);
     } else if (event is UpdateDataEvent) {
       yield ShopUpdateItem(itemBox.getAt(event.id).name);
+    } else if( event is UpdateAnimationEvent){
+      yield ShopUpdateAnimation(event.showAnimation);
     }
   }
 }

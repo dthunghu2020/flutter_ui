@@ -21,9 +21,7 @@ void main() async {
     MySetting().setFirstTime(true);
     addItemsData();
   }
-  MovieApiProvider test = MovieApiProvider();
-  MovieData data = await test.getDataMovieGetFromApi();
-  print('data: page(${data.page}) - total_results(${data.totalResults}) - total_pages(${data.totalPages})');
+
   return runApp(MaterialApp(
     title: 'Login App',
     home: LoginHome(),

@@ -23,3 +23,9 @@ class ShopUpdateItem extends ShopState {
 
   ShopUpdateItem(this.name);
 }
+
+class ShopUpdateAnimation extends ShopState {
+  bool showAnimation;
+
+  ShopUpdateAnimation(this.showAnimation);
+}

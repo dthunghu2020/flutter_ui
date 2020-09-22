@@ -12,3 +12,9 @@ class UpdateDataEvent extends ShopEvent {
 
   UpdateDataEvent(this.id);
 }
+
+class UpdateAnimationEvent extends ShopEvent {
+  bool showAnimation;
+
+  UpdateAnimationEvent(this.showAnimation);
+}

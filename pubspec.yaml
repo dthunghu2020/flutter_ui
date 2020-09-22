@@ -31,6 +31,7 @@ dependencies:
   hive_flutter: ^0.3.1
   shared_preferences: ^0.5.10
   dio: ^3.0.10
+  cached_network_image: ^2.3.2+1
 
 
 

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
+import 'package:learning_ui/bloc/api_bloc.dart';
+import 'package:learning_ui/bloc/api_state.dart';
 import 'package:learning_ui/bloc/detail_bloc.dart';
 import 'package:learning_ui/bloc/detail_state.dart';
 import 'package:learning_ui/bloc/shop_bloc.dart';
@@ -11,6 +13,7 @@ import 'package:learning_ui/bloc/shop_event.dart';
 import 'package:learning_ui/bloc/shop_state.dart';
 import 'package:learning_ui/hive/item.dart';
 import 'package:learning_ui/view/detail_screen.dart';
+import 'package:learning_ui/view/test_api_screen.dart';
 
 class ShopScreen extends StatefulWidget {
   @override
@@ -24,6 +27,7 @@ class _ShopScreenState extends State<ShopScreen> {
   List _valNames = ['population', 'hot', 'new', 'normal'];
   String _dropVal, _itemName;
   bool _loadingVisible = false;
+  bool _showAnimation = false;
 
   @override
   void initState() {
@@ -54,6 +58,14 @@ class _ShopScreenState extends State<ShopScreen> {
                   backgroundColor: Colors.grey,
                   textColor: Colors.white,
                   fontSize: 16.0);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BlocProvider(
+                      create: (context) => ApiBloc(ApiInitial()),
+                      child: TestApiScreen(),
+                    ),
+                  ));
             },
             child: Icon(
               Icons.menu,
@@ -88,17 +100,65 @@ class _ShopScreenState extends State<ShopScreen> {
           ],
         ),
         body: SafeArea(
-            child: Column(
-          children: [
-            _search(),
-            _title(),
-            _searchTool(),
-            _listItem(),
-          ],
+            child: BlocConsumer(
+          cubit: _shopBloc,
+          listenWhen: (previous, current) => current is ShopUpdateAnimation,
+          listener: (context, state) {
+            if (state is ShopUpdateAnimation) {
+              _showAnimation = state.showAnimation;
+            }
+          },
+          buildWhen: (previous, current) => current is ShopUpdateAnimation,
+          builder: (context, state) {
+            return Stack(
+              children: [
+                Column(
+                  children: [
+                    _search(),
+                    _title(),
+                    _searchTool(),
+                    _listItem(),
+                  ],
+                ),
+                _floatButton(),
+                _widgetAnimation(),
+              ],
+            );
+          },
         )),
       ),
     );
   }
+
+  Widget _floatButton() => Container(
+        margin: EdgeInsets.only(right: 10),
+        alignment: Alignment.bottomRight,
+        child: FloatingActionButton(
+          onPressed: () {
+           _shopBloc.add(UpdateAnimationEvent(!_showAnimation));
+          },
+          child: Icon(Icons.add),
+        ),
+      );
+
+  Widget _widgetAnimation() => AnimatedPositioned(
+        duration: Duration(milliseconds: 400),
+        top: _showAnimation
+            ? MediaQuery.of(context).size.height * 0.08
+            : MediaQuery.of(context).size.height,
+        child: Container(
+          padding: EdgeInsets.all(10),
+          alignment: Alignment.topRight,
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height * 0.8,
+          color: Colors.blueGrey,
+          child: GestureDetector(
+              onTap: () {
+                _shopBloc.add(UpdateAnimationEvent(!_showAnimation));
+              },
+              child: Icon(Icons.close)),
+        ),
+      );
 
   Widget _search() => Container(
         alignment: Alignment.topCenter,
