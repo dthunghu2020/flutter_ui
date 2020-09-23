@@ -32,8 +32,18 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
       yield ShopInitial(itemBox);
     } else if (event is UpdateDataEvent) {
       yield ShopUpdateItem(itemBox.getAt(event.id).name);
-    } else if( event is UpdateAnimationEvent){
-      yield ShopUpdateAnimation(event.showAnimation);
+    } else if (event is OpenDetailAnimationEvent) {
+      yield ShopOpenDetailAnimation(event.id);
+    } else if (event is CloseDetailAnimationEvent) {
+      yield ShopCloseDetailAnimation();
+    } else if (event is EditingDetailNameEvent) {
+      yield ShopEditingDetailName(event.name);
+    } else if (event is SaveDetailNameEvent) {
+      // Hive.box<Item>(itemBoxName).getAt(event.id).name = event.name;
+      Item item = Hive.box<Item>(itemBoxName).getAt(event.id);
+      item.name = event.name;
+      Hive.box<Item>(itemBoxName).put(event.id, item);
+      yield ShopSavedDetailName(event.name);
     }
   }
 }

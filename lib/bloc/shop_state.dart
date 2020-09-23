@@ -18,14 +18,29 @@ class ShopGoToDetailSuccess extends ShopState {
 }
 
 class ShopGoToDetailError extends ShopState {}
+
 class ShopUpdateItem extends ShopState {
   String name;
 
   ShopUpdateItem(this.name);
 }
 
-class ShopUpdateAnimation extends ShopState {
-  bool showAnimation;
+class ShopOpenDetailAnimation extends ShopState {
+  int id;
 
-  ShopUpdateAnimation(this.showAnimation);
+  ShopOpenDetailAnimation(this.id);
+}
+
+class ShopCloseDetailAnimation extends ShopState {}
+
+class ShopEditingDetailName extends ShopState {
+  String name;
+
+  ShopEditingDetailName(this.name);
+}
+
+class ShopSavedDetailName extends ShopState {
+  String name;
+
+  ShopSavedDetailName(this.name);
 }

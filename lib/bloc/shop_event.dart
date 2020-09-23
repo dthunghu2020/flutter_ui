@@ -13,8 +13,28 @@ class UpdateDataEvent extends ShopEvent {
   UpdateDataEvent(this.id);
 }
 
-class UpdateAnimationEvent extends ShopEvent {
-  bool showAnimation;
+class OpenDetailAnimationEvent extends ShopEvent {
+int id;
 
-  UpdateAnimationEvent(this.showAnimation);
+  OpenDetailAnimationEvent(this.id);
 }
+
+class CloseDetailAnimationEvent extends ShopEvent {
+
+
+  CloseDetailAnimationEvent();
+}
+
+class EditingDetailNameEvent extends ShopEvent {
+  String name;
+
+  EditingDetailNameEvent(this.name);
+}
+
+class SaveDetailNameEvent extends ShopEvent {
+  String name;
+  int id;
+
+  SaveDetailNameEvent(this.name,this.id);
+}
+
