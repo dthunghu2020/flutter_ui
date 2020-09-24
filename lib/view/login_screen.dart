@@ -20,7 +20,7 @@ class LoginHome extends StatefulWidget {
 
 class _LoginHomeState extends State<LoginHome> {
   String infor = '';
-  bool vLoading = false;
+  bool _vLoading = false;
   LoginBloc _loginBloc;
   TextEditingController _userNameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
@@ -59,35 +59,42 @@ class _LoginHomeState extends State<LoginHome> {
                 BlocConsumer(
                     cubit: _loginBloc,
                     listenWhen: (previous, current) =>
-                        current is LoginLoading ||
+                    current is LoginLoading ||
                         current is LoginSuccess ||
                         current is LoginError ||
-                        current is LoginCreateAccount,
+                        current is LoginCreateAccount ||
+                        current is LoginEmpty,
                     listener: (context, state) {
                       if (state is LoginLoading) {
-                        vLoading = true;
+                        _vLoading = true;
                       } else if (state is LoginSuccess) {
-                        vLoading = false;
+                        _vLoading = false;
                         infor = state.name;
                         Navigator.push(
                             context,
                             new MaterialPageRoute(
-                                builder: (context) => BlocProvider(
-                                    create: (context)=> ShopBloc(ShopLoading()),
-                                    child: ShopScreen())));
+                                builder: (context) =>
+                                    BlocProvider(
+                                        create: (context) =>
+                                            ShopBloc(ShopLoading()),
+                                        child: ShopScreen())));
                       } else if (state is LoginError) {
-                        vLoading = false;
-                        _toast('Login Error');
+                        _vLoading = false;
+                        toast('Login Error');
                       } else if (state is LoginCreateAccount) {
                         showDialog(
                             context: context,
                             builder: (context) => AddPerson());
+                      } else if (state is LoginEmpty) {
+                        _vLoading = false;
+                        toast('Please enter all title!');
                       }
                     },
                     buildWhen: (previous, current) =>
-                        current is LoginLoading ||
+                    current is LoginLoading ||
                         current is LoginSuccess ||
-                        current is LoginError,
+                        current is LoginError||
+                    current is LoginEmpty,
                     builder: (context, LoginStates state) {
                       return Stack(
                         children: [
@@ -101,7 +108,7 @@ class _LoginHomeState extends State<LoginHome> {
                           Container(
                             alignment: Alignment.center,
                             child: Visibility(
-                                visible: vLoading,
+                                visible: _vLoading,
                                 child: CircularProgressIndicator()),
                           ),
                         ],
@@ -120,10 +127,19 @@ class _LoginHomeState extends State<LoginHome> {
       alignment: Alignment.center,
       child: Padding(
         padding:
-            EdgeInsets.only(bottom: MediaQuery.of(context).size.height * 0.6),
+        EdgeInsets.only(bottom: MediaQuery
+            .of(context)
+            .size
+            .height * 0.6),
         child: Container(
-          width: MediaQuery.of(context).size.width / 4,
-          height: MediaQuery.of(context).size.width / 4,
+          width: MediaQuery
+              .of(context)
+              .size
+              .width / 4,
+          height: MediaQuery
+              .of(context)
+              .size
+              .width / 4,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
@@ -138,10 +154,13 @@ class _LoginHomeState extends State<LoginHome> {
           ),
           child: Center(
               child: Icon(
-            Icons.account_box,
-            color: Colors.red,
-            size: MediaQuery.of(context).size.width / 7,
-          )),
+                Icons.account_box,
+                color: Colors.red,
+                size: MediaQuery
+                    .of(context)
+                    .size
+                    .width / 7,
+              )),
         ),
       ),
     );
@@ -151,8 +170,14 @@ class _LoginHomeState extends State<LoginHome> {
     return Align(
       alignment: Alignment.center,
       child: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height * 0.6,
+        width: MediaQuery
+            .of(context)
+            .size
+            .width,
+        height: MediaQuery
+            .of(context)
+            .size
+            .height * 0.6,
         margin: EdgeInsets.only(left: 12, right: 12),
         decoration: BoxDecoration(
             color: Colors.white,
@@ -182,14 +207,19 @@ class _LoginHomeState extends State<LoginHome> {
               ),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10),
-                height: MediaQuery.of(context).size.height * 0.06,
+                height: MediaQuery
+                    .of(context)
+                    .size
+                    .height * 0.06,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: TextField(
                   controller: _userNameController,
-                  decoration: InputDecoration(border: InputBorder.none),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                  ),
                 ),
               ),
               SizedBox(
@@ -206,7 +236,10 @@ class _LoginHomeState extends State<LoginHome> {
               ),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10),
-                height: MediaQuery.of(context).size.height * 0.06,
+                height: MediaQuery
+                    .of(context)
+                    .size
+                    .height * 0.06,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(6),
@@ -230,7 +263,10 @@ class _LoginHomeState extends State<LoginHome> {
               ),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10),
-                height: MediaQuery.of(context).size.height * 0.06,
+                height: MediaQuery
+                    .of(context)
+                    .size
+                    .height * 0.06,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(6),
@@ -244,8 +280,14 @@ class _LoginHomeState extends State<LoginHome> {
                 height: 30,
               ),
               Container(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.06,
+                width: MediaQuery
+                    .of(context)
+                    .size
+                    .width,
+                height: MediaQuery
+                    .of(context)
+                    .size
+                    .height * 0.06,
                 child: FlatButton(
                   color: Colors.red,
                   shape: RoundedRectangleBorder(
@@ -271,19 +313,25 @@ class _LoginHomeState extends State<LoginHome> {
       alignment: Alignment.center,
       child: Padding(
         padding:
-            EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.75),
+        EdgeInsets.only(top: MediaQuery
+            .of(context)
+            .size
+            .height * 0.75),
         child: Container(
           margin: EdgeInsets.only(left: 42, right: 42),
-          height: MediaQuery.of(context).size.height * 0.06,
+          height: MediaQuery
+              .of(context)
+              .size
+              .height * 0.06,
           child: FlatButton(
               color: Colors.blueAccent,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
               onPressed: () {
                 _loginBloc.add(CheckLoginEvent(
-                    userName: _userNameController.text,
-                    passWord: _passWordController.text,
-                    mail: _emailController.text));
+                    userName: _userNameController.text ?? '',
+                    passWord: _passWordController.text ?? '',
+                    mail: _emailController.text ?? ''));
               },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -311,7 +359,10 @@ class _LoginHomeState extends State<LoginHome> {
   Widget _redBar() {
     return Container(
       width: double.infinity,
-      height: MediaQuery.of(context).size.height * 0.4,
+      height: MediaQuery
+          .of(context)
+          .size
+          .height * 0.4,
       decoration: BoxDecoration(
           color: Colors.red,
           borderRadius: BorderRadius.only(
@@ -356,8 +407,14 @@ class _AddPersonState extends State<AddPerson> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
           ),
-          width: MediaQuery.of(context).size.width * 0.86,
-          height: MediaQuery.of(context).size.height * 0.56,
+          width: MediaQuery
+              .of(context)
+              .size
+              .width * 0.86,
+          height: MediaQuery
+              .of(context)
+              .size
+              .height * 0.56,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,14 +440,17 @@ class _AddPersonState extends State<AddPerson> {
               Container(
                 margin: EdgeInsets.only(top: 5, bottom: 12),
                 padding: EdgeInsets.symmetric(horizontal: 10),
-                height: MediaQuery.of(context).size.height * 0.06,
+                height: MediaQuery
+                    .of(context)
+                    .size
+                    .height * 0.06,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: TextField(
                   controller: _userNameController,
-                  decoration: InputDecoration(border: InputBorder.none),
+                  decoration: InputDecoration(border: InputBorder.none,errorText: validatePassword(_userNameController.text)),
                 ),
               ),
               Text(
@@ -402,7 +462,10 @@ class _AddPersonState extends State<AddPerson> {
               Container(
                 margin: EdgeInsets.only(top: 5, bottom: 12),
                 padding: EdgeInsets.symmetric(horizontal: 10),
-                height: MediaQuery.of(context).size.height * 0.06,
+                height: MediaQuery
+                    .of(context)
+                    .size
+                    .height * 0.06,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(6),
@@ -421,7 +484,10 @@ class _AddPersonState extends State<AddPerson> {
               Container(
                 margin: EdgeInsets.only(top: 5, bottom: 12),
                 padding: EdgeInsets.symmetric(horizontal: 10),
-                height: MediaQuery.of(context).size.height * 0.06,
+                height: MediaQuery
+                    .of(context)
+                    .size
+                    .height * 0.06,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(6),
@@ -434,8 +500,14 @@ class _AddPersonState extends State<AddPerson> {
               ),
               Container(
                 margin: EdgeInsets.only(top: 10),
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.06,
+                width: MediaQuery
+                    .of(context)
+                    .size
+                    .width,
+                height: MediaQuery
+                    .of(context)
+                    .size
+                    .height * 0.06,
                 child: FlatButton(
                   color: Colors.red,
                   shape: RoundedRectangleBorder(
@@ -444,7 +516,7 @@ class _AddPersonState extends State<AddPerson> {
                     var person = Person(_userNameController.text,
                         _emailController.text, _passWordController.text);
                     addPerson(person);
-                    _toast('Create account');
+                    toast('Create account');
                   },
                   child: Text(
                     'CREATE ACCOUNT',
@@ -464,15 +536,13 @@ class _AddPersonState extends State<AddPerson> {
     personBox.add(person);
     Navigator.of(context).pop();
   }
+
+  String validatePassword(String value) {
+    if (!(value.length > 5) && value.isNotEmpty) {
+      return "Password should contains more then 5 character";
+    }
+    return null;
+  }
 }
 
-void _toast(String title) {
-  Fluttertoast.showToast(
-      msg: title,
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
-      timeInSecForIosWeb: 1,
-      backgroundColor: Colors.grey,
-      textColor: Colors.white,
-      fontSize: 16.0);
-}
+

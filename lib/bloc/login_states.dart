@@ -14,4 +14,6 @@ class LoginSuccess extends LoginStates {
 
 class LoginError extends LoginStates {}
 
+class LoginEmpty extends LoginStates {}
+
 class LoginCreateAccount extends LoginStates{}

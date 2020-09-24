@@ -4,9 +4,9 @@ import 'package:learning_ui/hive/item.dart';
 class ShopState {}
 
 class ShopInitial extends ShopState {
-  Box<Item> itemBox;
+  List<Item> items;
 
-  ShopInitial(this.itemBox);
+  ShopInitial(this.items);
 }
 
 class ShopLoading extends ShopState {}
@@ -43,4 +43,10 @@ class ShopSavedDetailName extends ShopState {
   String name;
 
   ShopSavedDetailName(this.name);
+}
+
+class ShopSearchName extends ShopState {
+  List<Item> items;
+
+  ShopSearchName(this.items);
 }

@@ -38,3 +38,9 @@ class SaveDetailNameEvent extends ShopEvent {
   SaveDetailNameEvent(this.name,this.id);
 }
 
+class SearchNameEvent extends ShopEvent{
+  String value;
+
+  SearchNameEvent(this.value);
+}
+

@@ -7,16 +7,14 @@ import 'package:learning_ui/hive/item.dart';
 import 'package:learning_ui/main.dart';
 
 class ShopBloc extends Bloc<ShopEvent, ShopState> {
-  Box<Item> itemBox = Hive.box<Item>(itemBoxName);
-
   ShopBloc(ShopState initialState) : super(initialState);
 
   @override
   Stream<ShopState> mapEventToState(ShopEvent event) async* {
     if (event is GoToDetailEvent) {
       bool existData = false;
-      for (int i = 0; i < itemBox.values.length; i++) {
-        if (itemBox.getAt(i).id == event.id) {
+      for (int i = 0; i < Hive.box<Item>(itemBoxName).values.length; i++) {
+        if (Hive.box<Item>(itemBoxName).getAt(i).id == event.id) {
           existData = true;
           break;
         }
@@ -29,9 +27,9 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
     } else if (event is LoadingDataEvent) {
       yield ShopLoading();
       await Future.delayed(Duration(seconds: 3));
-      yield ShopInitial(itemBox);
+      yield ShopInitial(Hive.box<Item>(itemBoxName).values.toList());
     } else if (event is UpdateDataEvent) {
-      yield ShopUpdateItem(itemBox.getAt(event.id).name);
+      yield ShopUpdateItem(Hive.box<Item>(itemBoxName).getAt(event.id).name);
     } else if (event is OpenDetailAnimationEvent) {
       yield ShopOpenDetailAnimation(event.id);
     } else if (event is CloseDetailAnimationEvent) {
@@ -39,11 +37,15 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
     } else if (event is EditingDetailNameEvent) {
       yield ShopEditingDetailName(event.name);
     } else if (event is SaveDetailNameEvent) {
-      // Hive.box<Item>(itemBoxName).getAt(event.id).name = event.name;
       Item item = Hive.box<Item>(itemBoxName).getAt(event.id);
       item.name = event.name;
       Hive.box<Item>(itemBoxName).put(event.id, item);
       yield ShopSavedDetailName(event.name);
+    }else if(event is SearchNameEvent){
+      List<Item> items = Hive.box<Item>(itemBoxName).values.toList().where((item) {
+        return item.name.toLowerCase().contains(event.value);
+      }).toList();
+      yield ShopSearchName(items);
     }
   }
 }

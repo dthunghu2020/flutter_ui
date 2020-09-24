@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:grouped_buttons/grouped_buttons.dart';
 import 'package:hive/hive.dart';
 import 'package:learning_ui/bloc/detail_bloc.dart';
@@ -8,7 +7,6 @@ import 'package:learning_ui/bloc/detail_event.dart';
 import 'package:learning_ui/bloc/detail_state.dart';
 import 'package:learning_ui/hive/item.dart';
 import 'package:learning_ui/main.dart';
-import 'package:learning_ui/model/model_list.dart';
 
 class DetailScreen extends StatefulWidget {
   int idItem;
@@ -85,14 +83,7 @@ class _DetailScreenState extends State<DetailScreen> {
               actions: [
                 GestureDetector(
                   onTap: () {
-                    Fluttertoast.showToast(
-                        msg: "shop cart",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.grey,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
+                    toast('Shop Cart');
                   },
                   child: Icon(
                     Icons.add_shopping_cart,
@@ -170,14 +161,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 flex: 1,
                 child: InkWell(
                   onTap: () {
-                    Fluttertoast.showToast(
-                        msg: "Search",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.grey,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
+                    toast('Search');
                   },
                   child: Container(
                     width: double.infinity,
@@ -449,14 +433,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 flex: 5,
                 child: GestureDetector(
                   onTap: () {
-                    Fluttertoast.showToast(
-                        msg: "Add to Cart",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.grey,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
+                    toast('Add to Cart');
                   },
                   child: Container(
                     alignment: Alignment.center,
@@ -501,14 +478,7 @@ class _DetailScreenState extends State<DetailScreen> {
         alignment: Alignment.centerRight,
         child: GestureDetector(
           onTap: () {
-            Fluttertoast.showToast(
-                msg: "Ask",
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.grey,
-                textColor: Colors.white,
-                fontSize: 16.0);
+            toast('Ask');
           },
           child: Container(
             margin: EdgeInsets.only(right: 40, bottom: 10),
@@ -532,13 +502,6 @@ class _DetailScreenState extends State<DetailScreen> {
 
   void _moveToLastScreen() {
     Navigator.pop(context,_changed);
-    Fluttertoast.showToast(
-        msg: "Back",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.grey,
-        textColor: Colors.white,
-        fontSize: 16.0);
+    toast('Back');
   }
 }

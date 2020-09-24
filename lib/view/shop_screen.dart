@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:grouped_buttons/grouped_buttons.dart';
 import 'package:hive/hive.dart';
 import 'package:learning_ui/bloc/api_bloc.dart';
@@ -24,7 +23,7 @@ class ShopScreen extends StatefulWidget {
 
 class _ShopScreenState extends State<ShopScreen> {
   ShopBloc _shopBloc;
-  Box<Item> _itemBox;
+
   List<Item> _itemSearchList = List();
 
   List _valNames = ['population', 'hot', 'new', 'normal'];
@@ -42,9 +41,6 @@ class _ShopScreenState extends State<ShopScreen> {
     _shopBloc = BlocProvider.of<ShopBloc>(context);
     _shopBloc.add(LoadingDataEvent());
     //_itemSearchList = _itemBox.get();
-    for (int i = 0; i < 10; i++) {
-      //_itemSearchList.add(Item(id, image, name, cost, size));
-    }
   }
 
   @override
@@ -59,14 +55,7 @@ class _ShopScreenState extends State<ShopScreen> {
             backgroundColor: Colors.pink[200],
             leading: GestureDetector(
               onTap: () {
-                Fluttertoast.showToast(
-                    msg: "menu",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.grey,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
+                toast('Menu');
                 Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -89,14 +78,7 @@ class _ShopScreenState extends State<ShopScreen> {
             actions: [
               GestureDetector(
                 onTap: () {
-                  Fluttertoast.showToast(
-                      msg: "shop cart",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      timeInSecForIosWeb: 1,
-                      backgroundColor: Colors.grey,
-                      textColor: Colors.white,
-                      fontSize: 16.0);
+                  toast('Shop Cart');
                 },
                 child: Icon(
                   Icons.add_shopping_cart,
@@ -135,7 +117,7 @@ class _ShopScreenState extends State<ShopScreen> {
           if (state is ShopOpenDetailAnimation) {
             _showAnimation = !_showAnimation;
             _itemId = state.id;
-            _name = _itemBox.getAt(_itemId).name;
+            _name =  Hive.box<Item>(itemBoxName).values.toList()[_itemId].name;
           } else if (state is ShopCloseDetailAnimation) {
             _showAnimation = !_showAnimation;
             _editingName = false;
@@ -222,7 +204,8 @@ class _ShopScreenState extends State<ShopScreen> {
                     decoration: InputDecoration(
                         border: InputBorder.none, hintText: 'Search'),
                     onChanged: (value) {
-                      //todo
+                      value = value.toLowerCase();
+                      _shopBloc.add(SearchNameEvent(value));
                     },
                   ),
                 ),
@@ -231,14 +214,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 flex: 1,
                 child: InkWell(
                   onTap: () {
-                    Fluttertoast.showToast(
-                        msg: "Search",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.grey,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
+                   toast('Search');
                   },
                   child: Container(
                     width: double.infinity,
@@ -336,22 +312,16 @@ class _ShopScreenState extends State<ShopScreen> {
               current is ShopLoading ||
               current is ShopInitial ||
               current is ShopGoToDetailSuccess ||
-              current is ShopGoToDetailError,
+              current is ShopGoToDetailError ||
+              current is ShopSearchName,
           listener: (context, state) async {
             if (state is ShopLoading) {
               _loadingVisible = true;
             } else if (state is ShopInitial) {
               _loadingVisible = false;
-              _itemBox = state.itemBox;
+              _itemSearchList = state.items;
             } else if (state is ShopGoToDetailSuccess) {
-              Fluttertoast.showToast(
-                  msg: "Item ${state.id} clicked ",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.BOTTOM,
-                  timeInSecForIosWeb: 1,
-                  backgroundColor: Colors.grey,
-                  textColor: Colors.white,
-                  fontSize: 16.0);
+              toast('Item ${state.id} clicked');
               bool _result = await Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -362,180 +332,184 @@ class _ShopScreenState extends State<ShopScreen> {
                 _shopBloc.add(UpdateDataEvent(state.id));
               }
             } else if (state is ShopGoToDetailError) {
-              Fluttertoast.showToast(
-                  msg: "Error",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.BOTTOM,
-                  timeInSecForIosWeb: 1,
-                  backgroundColor: Colors.grey,
-                  textColor: Colors.white,
-                  fontSize: 16.0);
+              toast('Error');
+            } else if (state is ShopSearchName) {
+              _itemSearchList = state.items;
             }
           },
           buildWhen: (previous, current) =>
-              current is ShopLoading || current is ShopInitial,
+              current is ShopLoading ||
+              current is ShopInitial ||
+              current is ShopSearchName,
           builder: (context, state) {
-            if (_itemBox != null) {
-              return Container(
-                margin: EdgeInsets.only(top: 10),
-                child: GridView.builder(
-                  itemCount: _itemBox.length,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () {
-                          //_shopBloc.add(GoToDetailEvent(item.id));
-                          _shopBloc.add(OpenDetailAnimationEvent(item.id));
-                        },
-                        child: BlocBuilder(
-                          cubit: _shopBloc,
-                          buildWhen: (previous, current) =>
-                          current is ShopUpdateItem,
-                          builder: (context, state) => Container(
-                            padding: EdgeInsets.all(10),
-                            child: Column(
-                              children: [
-                                //hình ảnh
-                                Expanded(
-                                  flex: 8,
-                                  child: Container(
-                                    width:
-                                    MediaQuery.of(context).size.width *
-                                        0.4,
-                                    height:
-                                    MediaQuery.of(context).size.width *
-                                        0.4,
-                                    child: Image(
-                                      image: AssetImage(item.image),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 2,
-                                ),
-                                //tên
-                                Expanded(
-                                  flex: 3,
-                                  child: Container(
-                                    child: Text(
-                                      item.name,
-                                      style: TextStyle(fontSize: 12.6),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 2,
-                                ),
-                                //tiền
-                                Expanded(
-                                  flex: 1,
-                                  child: Container(
-                                    width: double.infinity,
-                                    child: Text(
-                                      item.cost,
-                                      style: TextStyle(
-                                          color: Colors.red,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
-                                //bottom
-                                Expanded(
-                                  flex: 1,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                          flex: 1,
-                                          child: Icon(
-                                            Icons.star,
-                                            size: 18,
-                                            color: Colors.orangeAccent,
-                                          )),
-                                      Expanded(
-                                          flex: 1,
-                                          child: Icon(
-                                            Icons.star,
-                                            size: 18,
-                                            color: Colors.orangeAccent,
-                                          )),
-                                      Expanded(
-                                          flex: 1,
-                                          child: Icon(
-                                            Icons.star,
-                                            size: 18,
-                                            color: Colors.orangeAccent,
-                                          )),
-                                      Expanded(
-                                          flex: 1,
-                                          child: Icon(
-                                            Icons.star,
-                                            size: 18,
-                                            color: Colors.orangeAccent,
-                                          )),
-                                      Expanded(
-                                        flex: 1,
-                                        child: SizedBox(),
+            if (_itemSearchList != null) {
+              return Stack(
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(top: 10),
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 4,
+                        mainAxisSpacing: 4,
+                        childAspectRatio: 0.7,
+                      ),
+                      itemCount: _itemSearchList.length,
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            //_shopBloc.add(GoToDetailEvent(item.id));
+                            _shopBloc.add(OpenDetailAnimationEvent(
+                                _itemSearchList[index].id));
+                          },
+                          child: BlocBuilder(
+                            cubit: _shopBloc,
+                            buildWhen: (previous, current) =>
+                                current is ShopUpdateItem,
+                            builder: (context, state) => Container(
+                              padding: EdgeInsets.all(10),
+                              child: Column(
+                                children: [
+                                  //hình ảnh
+                                  Expanded(
+                                    flex: 8,
+                                    child: Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.4,
+                                      height:
+                                          MediaQuery.of(context).size.width *
+                                              0.4,
+                                      child: Image(
+                                        image: AssetImage(
+                                            _itemSearchList[index].image),
+                                        fit: BoxFit.cover,
                                       ),
-                                      Expanded(
-                                          flex: 5,
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              var x = item.id;
-                                              Fluttertoast.showToast(
-                                                  msg: "Add $x",
-                                                  toastLength:
-                                                  Toast.LENGTH_SHORT,
-                                                  gravity:
-                                                  ToastGravity.BOTTOM,
-                                                  timeInSecForIosWeb: 1,
-                                                  backgroundColor:
-                                                  Colors.grey,
-                                                  textColor: Colors.white,
-                                                  fontSize: 16.0);
-                                            },
-                                            child: Container(
-                                              alignment: Alignment.center,
-                                              child: Text(
-                                                'Add to cart',
-                                                style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.red),
-                                              ),
-                                              decoration: BoxDecoration(
-                                                  borderRadius:
-                                                  BorderRadius.circular(
-                                                      12),
-                                                  color: Colors.white,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                        color: Colors.grey,
-                                                        blurRadius: 1,
-                                                        offset:
-                                                        Offset(0, 1))
-                                                  ]),
-                                            ),
-                                          )),
-                                    ],
+                                    ),
                                   ),
-                                )
-                              ],
+                                  SizedBox(
+                                    height: 2,
+                                  ),
+                                  //tên
+                                  Expanded(
+                                    flex: 3,
+                                    child: Container(
+                                      child: Text(
+                                        _itemSearchList[index].name,
+                                        style: TextStyle(fontSize: 12.6),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 2,
+                                  ),
+                                  //tiền
+                                  Expanded(
+                                    flex: 1,
+                                    child: Container(
+                                      width: double.infinity,
+                                      child: Text(
+                                        _itemSearchList[index].cost,
+                                        style: TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  //bottom
+                                  Expanded(
+                                    flex: 1,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                            flex: 1,
+                                            child: Icon(
+                                              Icons.star,
+                                              size: 18,
+                                              color: Colors.orangeAccent,
+                                            )),
+                                        Expanded(
+                                            flex: 1,
+                                            child: Icon(
+                                              Icons.star,
+                                              size: 18,
+                                              color: Colors.orangeAccent,
+                                            )),
+                                        Expanded(
+                                            flex: 1,
+                                            child: Icon(
+                                              Icons.star,
+                                              size: 18,
+                                              color: Colors.orangeAccent,
+                                            )),
+                                        Expanded(
+                                            flex: 1,
+                                            child: Icon(
+                                              Icons.star,
+                                              size: 18,
+                                              color: Colors.orangeAccent,
+                                            )),
+                                        Expanded(
+                                          flex: 1,
+                                          child: SizedBox(),
+                                        ),
+                                        Expanded(
+                                            flex: 5,
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                var x =
+                                                    _itemSearchList[index].id;
+                                                toast('Add $x');
+                                              },
+                                              child: Container(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  'Add to cart',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.red),
+                                                ),
+                                                decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12),
+                                                    color: Colors.white,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                          color: Colors.grey,
+                                                          blurRadius: 1,
+                                                          offset: Offset(0, 1))
+                                                    ]),
+                                              ),
+                                            )),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                    },
-                 /* childAspectRatio: ((MediaQuery.of(context).size.width / 2) /
-                      (MediaQuery.of(context).size.height * 0.34)),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 4,
-                  mainAxisSpacing: 4,
-                  children: _itemBox.values
-                      .map((item) => )
-                      .toList(),*/
-                ),
+                        );
+                      },
+                      /* childAspectRatio: ((MediaQuery.of(context).size.width / 2) /
+                        (MediaQuery.of(context).size.height * 0.34)),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 4,
+                    mainAxisSpacing: 4,
+                    children: _itemBox.values
+                        .map((item) => )
+                        .toList(),*/
+                    ),
+                  ),
+                  Visibility(
+                      visible: _loadingVisible,
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: CircularProgressIndicator(),
+                      ))
+                ],
               );
             } else {
               return Align(
@@ -552,11 +526,11 @@ class _ShopScreenState extends State<ShopScreen> {
         margin: EdgeInsets.only(top: 10),
         width: MediaQuery.of(context).size.width * 0.4,
         height: MediaQuery.of(context).size.width * 0.4,
-        child: Image.asset(_itemBox.getAt(_itemId).image),
+        child: Image.asset( Hive.box<Item>(itemBoxName).values.toList()[_itemId].image),
       );
 
   Widget _cost() => Text(
-        _itemBox.getAt(_itemId).cost,
+        Hive.box<Item>(itemBoxName).values.toList()[_itemId].cost,
         style: TextStyle(
             color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
       );
@@ -593,7 +567,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   fontSize: fontSize,
                 ),
                 orientation: GroupedButtonsOrientation.HORIZONTAL,
-                labels: _itemBox.getAt(_itemId).size),
+                labels:  Hive.box<Item>(itemBoxName).values.toList()[_itemId].size),
           ],
         ),
       );
@@ -728,14 +702,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 flex: 5,
                 child: GestureDetector(
                   onTap: () {
-                    Fluttertoast.showToast(
-                        msg: "Add to Cart",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.grey,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
+                  toast('Add to Cart');
                   },
                   child: Container(
                     alignment: Alignment.center,
@@ -780,14 +747,7 @@ class _ShopScreenState extends State<ShopScreen> {
         alignment: Alignment.centerRight,
         child: GestureDetector(
           onTap: () {
-            Fluttertoast.showToast(
-                msg: "Ask",
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.grey,
-                textColor: Colors.white,
-                fontSize: 16.0);
+            toast('Ask');
           },
           child: Container(
             margin: EdgeInsets.only(right: 40, bottom: 10),
